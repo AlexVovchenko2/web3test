@@ -41,22 +41,33 @@
         tg.expand();
 
         const userId = tg.initDataUnsafe?.user?.id || Math.floor(Math.random() * 1000000);
+        console.log("🆔 userId:", userId);
 
-        // ⬇️ ВАЖНО: сюда вставь адрес твоего Dev Tunnel
         const WS_URL = `wss://dnjzwnbf-8080.euw.devtunnels.ms/ws?user_id=${userId}`;
-        const ws = new WebSocket(WS_URL);
+        console.log("🔌 Подключение к", WS_URL);
+
+        let ws = new WebSocket(WS_URL);
 
         ws.onopen = () => {
             console.log("✅ WebSocket подключен");
         };
 
+        ws.onerror = (err) => {
+            console.error("❌ WebSocket ошибка:", err);
+        };
+
         ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            console.log("📩 Сообщение от сервера:", data);
+            console.log("📩 Получено сообщение:", event.data);
         };
 
         document.getElementById("clickBtn").addEventListener("click", () => {
-            ws.send(JSON.stringify({ action: "click", user: userId }));
+            if (ws.readyState === WebSocket.OPEN) {
+                const payload = { action: "click", user: userId, timestamp: Date.now() };
+                console.log("📤 Отправка:", payload);
+                ws.send(JSON.stringify(payload));
+            } else {
+                console.warn("⚠️ WebSocket не подключен");
+            }
         });
     </script>
 </body>
