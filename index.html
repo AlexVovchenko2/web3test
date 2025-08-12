@@ -38,18 +38,21 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         const tg = window.Telegram.WebApp;
-        tg.expand(); // разворачиваем на весь экран
+        tg.expand();
 
-        const userId = tg.initDataUnsafe?.user?.id || 0;
-        const ws = new WebSocket(`https://dnjzwnbf-8080.euw.devtunnels.ms/ws?user_id=${userId}`);
+        const userId = tg.initDataUnsafe?.user?.id || Math.floor(Math.random() * 1000000);
+
+        // ⬇️ ВАЖНО: сюда вставь адрес твоего Dev Tunnel
+        const WS_URL = `wss://dnjzwnbf-8080.euw.devtunnels.ms/ws?user_id=${userId}`;
+        const ws = new WebSocket(WS_URL);
 
         ws.onopen = () => {
-            console.log("WebSocket подключен");
+            console.log("✅ WebSocket подключен");
         };
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            console.log("Сообщение от сервера:", data);
+            console.log("📩 Сообщение от сервера:", data);
         };
 
         document.getElementById("clickBtn").addEventListener("click", () => {
