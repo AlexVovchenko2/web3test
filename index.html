@@ -1,65 +1,77 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>WS test</title>
-</head>
-<body style="font-family: sans-serif; background:#0f172a; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh;">
-  <h2>WebSocket тест</h2>
-  <button id="btn" style="padding:12px 20px; border-radius:8px; font-size:16px; cursor:pointer;">Отправить событие</button>
-  <pre id="log" style="margin-top:20px; width:90%; max-width:600px; background:#071029; padding:12px; border-radius:8px; min-height:120px;"></pre>
-
+  <meta charset="UTF-8">
+  <title>Тест WebApp</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #f3f3f3;
+      margin-top: 50px;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      padding: 15px 25px;
+      border: none;
+      font-size: 18px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <h1>WebApp Test</h1>
+  <button id="sendBtn">Отправить событие</button>
+  <div id="status">Статус: ⏳ Подключение...</div>
+
   <script>
-    const logEl = document.getElementById('log');
-    function log(...args){ console.log(...args); logEl.textContent += args.join(' ') + '\n'; logEl.scrollTop = logEl.scrollHeight; }
+    // Telegram WebApp API
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-    const tg = window.Telegram?.WebApp;
-    if (!tg) {
-      log("⚠️ Telegram.WebApp не найден. Открыто не через бота?");
-    }
-    // Получаем user id — если открыто не через бота, подставим тестовый id
-    const userId = tg?.initDataUnsafe?.user?.id || (Math.floor(Math.random()*900000)+100000);
-    log("userId =", userId);
+    const userId = tg.initDataUnsafe?.user?.id || "unknown";
+    const statusEl = document.getElementById("status");
 
-    // <- ВСТАВЬ СЮДА СВОЙ PUBLIC URL (dev tunnel) БЕЗ СЛЕША НА КОНЦЕ
-    const WS_BASE = "https://dnjzwnbf-8080.euw.devtunnels.ms";
+    // Автоматически формируем ws:// или wss:// в зависимости от протокола страницы
+    const wsProtocol = location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${wsProtocol}//${location.host}/ws?user_id=${userId}`;
 
-    const wsUrl = `wss://${WS_BASE.replace(/^https?:\/\//, '')}/ws?user_id=${userId}`;
-    log("WS URL:", wsUrl);
+    const ws = new WebSocket(wsUrl);
 
-    let ws;
-    function connect() {
-      ws = new WebSocket(wsUrl);
+    ws.onopen = () => {
+      statusEl.textContent = `Статус: ✅ Подключено как ${userId}`;
+    };
 
-      ws.onopen = () => {
-        log("✅ WebSocket: connected");
-      };
-      ws.onmessage = (ev) => {
-        log("📩 From server:", ev.data);
-      };
-      ws.onerror = (e) => {
-        log("❌ WebSocket error", e);
-      };
-      ws.onclose = (ev) => {
-        log("🔒 WebSocket closed", ev.code, ev.reason);
-        // можно reconnect через паузу, но для теста не будем
-      };
-    }
+    ws.onerror = (e) => {
+      statusEl.textContent = `Статус: ❌ Ошибка соединения`;
+      console.error("WebSocket error", e);
+    };
 
-    connect();
+    ws.onclose = (e) => {
+      statusEl.textContent = `Статус: 🔒 Закрыто (${e.code})`;
+    };
 
-    document.getElementById('btn').addEventListener('click', () => {
-      if (!ws || ws.readyState !== WebSocket.OPEN) {
-        log("⚠️ WS не в состоянии OPEN. Попытка переподключиться...");
-        connect();
-        setTimeout(() => log("Подождите 1s и нажмите ещё раз"), 500);
-        return;
+    ws.onmessage = (msg) => {
+      console.log("📩 Сообщение от сервера:", msg.data);
+    };
+
+    document.getElementById("sendBtn").addEventListener("click", () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          action: "click",
+          user: userId,
+          timestamp: Date.now()
+        }));
+      } else {
+        console.warn("WebSocket не подключен");
       }
-      const payload = { action: "click", from: userId, ts: Date.now() };
-      log("📤 Send:", JSON.stringify(payload));
-      ws.send(JSON.stringify(payload));
     });
   </script>
 </body>
