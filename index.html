@@ -2,12 +2,11 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Тест WebApp</title>
+  <title>WebApp Test</title>
   <style>
     body {
       font-family: sans-serif;
       text-align: center;
-      background: #f3f3f3;
       margin-top: 50px;
     }
     button {
@@ -32,25 +31,22 @@
   <div id="status">Статус: ⏳ Подключение...</div>
 
   <script>
-    // Telegram WebApp API
     const tg = window.Telegram.WebApp;
     tg.expand();
 
     const userId = tg.initDataUnsafe?.user?.id || "unknown";
     const statusEl = document.getElementById("status");
 
-    // Автоматически формируем ws:// или wss:// в зависимости от протокола страницы
-    const wsProtocol = location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${wsProtocol}//${location.host}/ws?user_id=${userId}`;
-
-    const ws = new WebSocket(wsUrl);
+    // Адрес твоего туннеля
+    const WS_BASE = "wss://dnjzwnbf-8080.euw.devtunnels.ms";
+    const ws = new WebSocket(`${WS_BASE}/ws?user_id=${userId}`);
 
     ws.onopen = () => {
       statusEl.textContent = `Статус: ✅ Подключено как ${userId}`;
     };
 
     ws.onerror = (e) => {
-      statusEl.textContent = `Статус: ❌ Ошибка соединения`;
+      statusEl.textContent = "Статус: ❌ Ошибка соединения";
       console.error("WebSocket error", e);
     };
 
@@ -64,11 +60,7 @@
 
     document.getElementById("sendBtn").addEventListener("click", () => {
       if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          action: "click",
-          user: userId,
-          timestamp: Date.now()
-        }));
+        ws.send(JSON.stringify({ action: "click", user: userId }));
       } else {
         console.warn("WebSocket не подключен");
       }
