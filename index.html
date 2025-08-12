@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Game Test</title>
+    <style>
+        body {
+            background: #0f172a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: sans-serif;
+        }
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(90deg, #ff7eb3, #ff758c);
+            border: none;
+            border-radius: 12px;
+            font-size: 20px;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 118, 165, 0.4);
+            transition: transform 0.1s ease-in-out;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <h1>Карточная игра (тест)</h1>
+    <button id="clickBtn">Сделать ход 🎯</button>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // разворачиваем на весь экран
+
+        const userId = tg.initDataUnsafe?.user?.id || 0;
+        const ws = new WebSocket(`wss://your-server.com/ws?user_id=${userId}`);
+
+        ws.onopen = () => {
+            console.log("WebSocket подключен");
+        };
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log("Сообщение от сервера:", data);
+        };
+
+        document.getElementById("clickBtn").addEventListener("click", () => {
+            ws.send(JSON.stringify({ action: "click", user: userId }));
+        });
+    </script>
+</body>
+</html>
