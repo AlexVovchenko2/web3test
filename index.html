@@ -1,74 +1,66 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Card Game Test</title>
-    <style>
-        body {
-            background: #0f172a;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            font-family: sans-serif;
-        }
-        button {
-            padding: 15px 30px;
-            background: linear-gradient(90deg, #ff7eb3, #ff758c);
-            border: none;
-            border-radius: 12px;
-            font-size: 20px;
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 118, 165, 0.4);
-            transition: transform 0.1s ease-in-out;
-        }
-        button:active {
-            transform: scale(0.95);
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WS test</title>
 </head>
-<body>
-    <h1>Карточная игра (тест)</h1>
-    <button id="clickBtn">Сделать ход 🎯</button>
+<body style="font-family: sans-serif; background:#0f172a; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh;">
+  <h2>WebSocket тест</h2>
+  <button id="btn" style="padding:12px 20px; border-radius:8px; font-size:16px; cursor:pointer;">Отправить событие</button>
+  <pre id="log" style="margin-top:20px; width:90%; max-width:600px; background:#071029; padding:12px; border-radius:8px; min-height:120px;"></pre>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script>
+    const logEl = document.getElementById('log');
+    function log(...args){ console.log(...args); logEl.textContent += args.join(' ') + '\n'; logEl.scrollTop = logEl.scrollHeight; }
 
-        const userId = tg.initDataUnsafe?.user?.id || Math.floor(Math.random() * 1000000);
-        console.log("🆔 userId:", userId);
+    const tg = window.Telegram?.WebApp;
+    if (!tg) {
+      log("⚠️ Telegram.WebApp не найден. Открыто не через бота?");
+    }
+    // Получаем user id — если открыто не через бота, подставим тестовый id
+    const userId = tg?.initDataUnsafe?.user?.id || (Math.floor(Math.random()*900000)+100000);
+    log("userId =", userId);
 
-        const WS_URL = `wss://dnjzwnbf-8080.euw.devtunnels.ms/ws?user_id=${userId}`;
-        console.log("🔌 Подключение к", WS_URL);
+    // <- ВСТАВЬ СЮДА СВОЙ PUBLIC URL (dev tunnel) БЕЗ СЛЕША НА КОНЦЕ
+    const WS_BASE = "https://dnjzwnbf-8080.euw.devtunnels.ms";
 
-        let ws = new WebSocket(WS_URL);
+    const wsUrl = `wss://${WS_BASE.replace(/^https?:\/\//, '')}/ws?user_id=${userId}`;
+    log("WS URL:", wsUrl);
 
-        ws.onopen = () => {
-            console.log("✅ WebSocket подключен");
-        };
+    let ws;
+    function connect() {
+      ws = new WebSocket(wsUrl);
 
-        ws.onerror = (err) => {
-            console.error("❌ WebSocket ошибка:", err);
-        };
+      ws.onopen = () => {
+        log("✅ WebSocket: connected");
+      };
+      ws.onmessage = (ev) => {
+        log("📩 From server:", ev.data);
+      };
+      ws.onerror = (e) => {
+        log("❌ WebSocket error", e);
+      };
+      ws.onclose = (ev) => {
+        log("🔒 WebSocket closed", ev.code, ev.reason);
+        // можно reconnect через паузу, но для теста не будем
+      };
+    }
 
-        ws.onmessage = (event) => {
-            console.log("📩 Получено сообщение:", event.data);
-        };
+    connect();
 
-        document.getElementById("clickBtn").addEventListener("click", () => {
-            if (ws.readyState === WebSocket.OPEN) {
-                const payload = { action: "click", user: userId, timestamp: Date.now() };
-                console.log("📤 Отправка:", payload);
-                ws.send(JSON.stringify(payload));
-            } else {
-                console.warn("⚠️ WebSocket не подключен");
-            }
-        });
-    </script>
+    document.getElementById('btn').addEventListener('click', () => {
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        log("⚠️ WS не в состоянии OPEN. Попытка переподключиться...");
+        connect();
+        setTimeout(() => log("Подождите 1s и нажмите ещё раз"), 500);
+        return;
+      }
+      const payload = { action: "click", from: userId, ts: Date.now() };
+      log("📤 Send:", JSON.stringify(payload));
+      ws.send(JSON.stringify(payload));
+    });
+  </script>
 </body>
 </html>
