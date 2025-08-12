@@ -41,7 +41,7 @@
         tg.expand(); // разворачиваем на весь экран
 
         const userId = tg.initDataUnsafe?.user?.id || 0;
-        const ws = new WebSocket(`https://ffayr0jgv.localto.net/ws?user_id=${userId}`);
+        const ws = new WebSocket(`https://dnjzwnbf-8080.euw.devtunnels.ms/ws?user_id=${userId}`);
 
         ws.onopen = () => {
             console.log("WebSocket подключен");
