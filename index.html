@@ -1,53 +1,101 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+  <meta charset="UTF-8">
+  <title>WebApp Test</title>
   <meta charset="UTF-8" />
-  <title>Simple WS Test</title>
+  <title>WebApp с WebSocket</title>
+<style>
+body {
+      font-family: sans-serif;
+      font-family: Arial, sans-serif;
+text-align: center;
+margin-top: 50px;
+}
+button {
+      background: #4CAF50;
+      color: white;
+      padding: 15px 25px;
+      border: none;
+      padding: 15px 30px;
+font-size: 18px;
+      border-radius: 8px;
+      border: none;
+      border-radius: 10px;
+      background-color: #0078d7;
+      color: white;
+cursor: pointer;
+}
+#status {
+@@ -26,45 +26,56 @@
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-  <h1>Simple WebSocket Test</h1>
-  <button id="btn">Send "Hello"</button>
-  <div id="status">Connecting...</div>
-  <div id="log"></div>
+  <h1>WebApp Test</h1>
+  <button id="sendBtn">Отправить событие</button>
+  <div id="status">Статус: ⏳ Подключение...</div>
+  <h1>WebApp с WebSocket</h1>
+  <button id="btnClick">Нажми меня</button>
+  <div id="status">Статус: Подключение...</div>
 
-  <script>
-    const statusEl = document.getElementById("status");
-    const logEl = document.getElementById("log");
-    const btn = document.getElementById("btn");
+<script>
+const tg = window.Telegram.WebApp;
+tg.expand();
 
-    // Поставь сюда реальный адрес своего туннеля (пример)
-    const WS_URL = "wss://dnjzwnbf-8080.euw.devtunnels.ms/ws";
+const userId = tg.initDataUnsafe?.user?.id || "unknown";
 
-    let ws = new WebSocket(WS_URL);
+const statusEl = document.getElementById("status");
+    const btn = document.getElementById("btnClick");
 
-    ws.onopen = () => {
-      statusEl.textContent = "Connected";
-      logEl.innerHTML += "<p>WS connected</p>";
-    };
+    // Твой публичный WS URL от DevTunnel (укажи свой!)
+    const WS_URL = "wss://dnjzwnbf-8080.euw.devtunnels.ms/ws?user_id=" + userId;
 
-    ws.onerror = (e) => {
-      statusEl.textContent = "Error";
-      logEl.innerHTML += "<p>WS error</p>";
+    // Адрес твоего туннеля
+    const WS_BASE = "wss://dnjzwnbf-8080.euw.devtunnels.ms";
+    const ws = new WebSocket(`${WS_BASE}/ws?user_id=${userId}`);
+    const ws = new WebSocket(WS_URL);
+
+ws.onopen = () => {
+      statusEl.textContent = `Статус: ✅ Подключено как ${userId}`;
+      statusEl.textContent = `Статус: Подключено как ${userId}`;
+      console.log("WebSocket подключён");
+};
+
+ws.onerror = (e) => {
+      statusEl.textContent = "Статус: ❌ Ошибка соединения";
       console.error("WebSocket error", e);
-    };
+      statusEl.textContent = "Статус: Ошибка WebSocket";
+      console.error("WebSocket error:", e);
+};
 
-    ws.onclose = (e) => {
-      statusEl.textContent = `Closed (${e.code})`;
-      logEl.innerHTML += `<p>WS closed (${e.code})</p>`;
-    };
+ws.onclose = (e) => {
+      statusEl.textContent = `Статус: 🔒 Закрыто (${e.code})`;
+      statusEl.textContent = `Статус: Закрыто (${e.code})`;
+      console.log("WebSocket закрыт", e);
+};
 
-    ws.onmessage = (msg) => {
-      logEl.innerHTML += `<p>Server: ${msg.data}</p>`;
-    };
+ws.onmessage = (msg) => {
+      console.log("📩 Сообщение от сервера:", msg.data);
+      console.log("Сообщение от сервера:", msg.data);
+};
 
+    document.getElementById("sendBtn").addEventListener("click", () => {
     btn.onclick = () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send("Hello from client");
-        logEl.innerHTML += "<p>Sent: Hello from client</p>";
-      } else {
-        alert("WebSocket is not connected");
-      }
+if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ action: "click", user: userId }));
+        const data = {
+          action: "click",
+          user: userId,
+          timestamp: Date.now(),
+        };
+        ws.send(JSON.stringify(data));
+        console.log("Отправлено:", data);
+} else {
+        console.warn("WebSocket не подключен");
+        alert("WebSocket не подключён");
+}
+    });
     };
-  </script>
+</script>
 </body>
 </html>
