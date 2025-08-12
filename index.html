@@ -2,78 +2,50 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>WebApp с WebSocket</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin-top: 50px;
-    }
-    button {
-      padding: 15px 30px;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      background-color: #0078d7;
-      color: white;
-      cursor: pointer;
-    }
-    #status {
-      margin-top: 20px;
-      font-weight: bold;
-    }
-  </style>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <title>Simple WS Test</title>
 </head>
 <body>
-  <h1>WebApp с WebSocket</h1>
-  <button id="btnClick">Нажми меня</button>
-  <div id="status">Статус: Подключение...</div>
+  <h1>Simple WebSocket Test</h1>
+  <button id="btn">Send "Hello"</button>
+  <div id="status">Connecting...</div>
+  <div id="log"></div>
 
   <script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-
-    const userId = tg.initDataUnsafe?.user?.id || "unknown";
-
     const statusEl = document.getElementById("status");
-    const btn = document.getElementById("btnClick");
+    const logEl = document.getElementById("log");
+    const btn = document.getElementById("btn");
 
-    // Твой публичный WS URL от DevTunnel (укажи свой!)
-    const WS_URL = "wss://dnjzwnbf-8080.euw.devtunnels.ms/ws?user_id=" + userId;
+    // Поставь сюда реальный адрес своего туннеля (пример)
+    const WS_URL = "wss://dnjzwnbf-8080.euw.devtunnels.ms/ws";
 
-    const ws = new WebSocket(WS_URL);
+    let ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
-      statusEl.textContent = `Статус: Подключено как ${userId}`;
-      console.log("WebSocket подключён");
+      statusEl.textContent = "Connected";
+      logEl.innerHTML += "<p>WS connected</p>";
     };
 
     ws.onerror = (e) => {
-      statusEl.textContent = "Статус: Ошибка WebSocket";
-      console.error("WebSocket error:", e);
+      statusEl.textContent = "Error";
+      logEl.innerHTML += "<p>WS error</p>";
+      console.error("WebSocket error", e);
     };
 
     ws.onclose = (e) => {
-      statusEl.textContent = `Статус: Закрыто (${e.code})`;
-      console.log("WebSocket закрыт", e);
+      statusEl.textContent = `Closed (${e.code})`;
+      logEl.innerHTML += `<p>WS closed (${e.code})</p>`;
     };
 
     ws.onmessage = (msg) => {
-      console.log("Сообщение от сервера:", msg.data);
+      logEl.innerHTML += `<p>Server: ${msg.data}</p>`;
     };
 
     btn.onclick = () => {
       if (ws.readyState === WebSocket.OPEN) {
-        const data = {
-          action: "click",
-          user: userId,
-          timestamp: Date.now(),
-        };
-        ws.send(JSON.stringify(data));
-        console.log("Отправлено:", data);
+        ws.send("Hello from client");
+        logEl.innerHTML += "<p>Sent: Hello from client</p>";
       } else {
-        alert("WebSocket не подключён");
+        alert("WebSocket is not connected");
       }
     };
   </script>
