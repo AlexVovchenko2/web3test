@@ -2,87 +2,66 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>WebApp Test</title>
-  <meta charset="UTF-8" />
   <title>WebApp с WebSocket</title>
-<style>
-body {
-      font-family: sans-serif;
+  <style>
+    body {
       font-family: Arial, sans-serif;
-text-align: center;
-margin-top: 50px;
-}
-button {
-      background: #4CAF50;
-      color: white;
-      padding: 15px 25px;
-      border: none;
-      padding: 15px 30px;
-font-size: 18px;
-      border-radius: 8px;
-      border: none;
-      border-radius: 10px;
+      text-align: center;
+      margin-top: 50px;
+    }
+    button {
       background-color: #0078d7;
       color: white;
-cursor: pointer;
-}
-#status {
-@@ -26,45 +26,56 @@
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+      padding: 15px 30px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 20px;
+    }
+  </style>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
-  <h1>WebApp Test</h1>
-  <button id="sendBtn">Отправить событие</button>
-  <div id="status">Статус: ⏳ Подключение...</div>
   <h1>WebApp с WebSocket</h1>
   <button id="btnClick">Нажми меня</button>
   <div id="status">Статус: Подключение...</div>
 
-<script>
-const tg = window.Telegram.WebApp;
-tg.expand();
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-const userId = tg.initDataUnsafe?.user?.id || "unknown";
-
-const statusEl = document.getElementById("status");
+    const userId = tg.initDataUnsafe?.user?.id || "unknown";
+    const statusEl = document.getElementById("status");
     const btn = document.getElementById("btnClick");
 
-    // Твой публичный WS URL от DevTunnel (укажи свой!)
-    const WS_URL = "wss://dnjzwnbf-8080.euw.devtunnels.ms/ws?user_id=" + userId;
-
-    // Адрес твоего туннеля
-    const WS_BASE = "wss://dnjzwnbf-8080.euw.devtunnels.ms";
+    // Твой туннель URL (замени на рабочий)
+    const WS_BASE = "wss://dnjzwnbf-8080.euw.devtunnels.ms";  // Или новый туннель
     const ws = new WebSocket(`${WS_BASE}/ws?user_id=${userId}`);
-    const ws = new WebSocket(WS_URL);
 
-ws.onopen = () => {
-      statusEl.textContent = `Статус: ✅ Подключено как ${userId}`;
+    ws.onopen = () => {
       statusEl.textContent = `Статус: Подключено как ${userId}`;
       console.log("WebSocket подключён");
-};
+    };
 
-ws.onerror = (e) => {
-      statusEl.textContent = "Статус: ❌ Ошибка соединения";
-      console.error("WebSocket error", e);
+    ws.onerror = (e) => {
       statusEl.textContent = "Статус: Ошибка WebSocket";
       console.error("WebSocket error:", e);
-};
+    };
 
-ws.onclose = (e) => {
-      statusEl.textContent = `Статус: 🔒 Закрыто (${e.code})`;
+    ws.onclose = (e) => {
       statusEl.textContent = `Статус: Закрыто (${e.code})`;
       console.log("WebSocket закрыт", e);
-};
+    };
 
-ws.onmessage = (msg) => {
-      console.log("📩 Сообщение от сервера:", msg.data);
+    ws.onmessage = (msg) => {
       console.log("Сообщение от сервера:", msg.data);
-};
+    };
 
-    document.getElementById("sendBtn").addEventListener("click", () => {
     btn.onclick = () => {
-if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ action: "click", user: userId }));
+      if (ws.readyState === WebSocket.OPEN) {
         const data = {
           action: "click",
           user: userId,
@@ -90,12 +69,11 @@ if (ws.readyState === WebSocket.OPEN) {
         };
         ws.send(JSON.stringify(data));
         console.log("Отправлено:", data);
-} else {
+      } else {
         console.warn("WebSocket не подключен");
         alert("WebSocket не подключён");
-}
-    });
+      }
     };
-</script>
+  </script>
 </body>
 </html>
