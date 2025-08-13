@@ -4,23 +4,9 @@
   <meta charset="UTF-8">
   <title>WebApp с WebSocket</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin-top: 50px;
-    }
-    button {
-      background-color: #0078d7;
-      color: white;
-      padding: 15px 30px;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-    #status {
-      margin-top: 20px;
-    }
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    button { background-color: #0078d7; color: white; padding: 15px 30px; font-size: 18px; border: none; border-radius: 10px; cursor: pointer; }
+    #status { margin-top: 20px; }
   </style>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
@@ -37,43 +23,47 @@
     const statusEl = document.getElementById("status");
     const btn = document.getElementById("btnClick");
 
-    // Твой туннель URL (замени на рабочий)
-    const WS_BASE = "https://rnksf-94-79-33-20.a.free.pinggy.link";  // Или новый туннель
+    // Замени на твой Pinggy URL
+    const WS_BASE = "wss://<твой-pinggy-url-здесь>"; // e.g., wss://abc.pinggy.link
     const ws = new WebSocket(`${WS_BASE}/ws?user_id=${userId}`);
 
     ws.onopen = () => {
       statusEl.textContent = `Статус: Подключено как ${userId}`;
-      console.log("WebSocket подключён");
+      console.log("WS connected at", new Date().toISOString());
     };
 
     ws.onerror = (e) => {
-      statusEl.textContent = "Статус: Ошибка WebSocket";
-      console.error("WebSocket error:", e);
+      statusEl.textContent = "Статус: Ошибка WS";
+      console.error("WS error:", e);
     };
 
     ws.onclose = (e) => {
-      statusEl.textContent = `Статус: Закрыто (${e.code})`;
-      console.log("WebSocket закрыт", e);
+      statusEl.textContent = `Статус: Закрыто (${e.code}, reason: ${e.reason || 'none'})`;
+      console.log("WS closed at", new Date().toISOString(), e);
     };
 
     ws.onmessage = (msg) => {
-      console.log("Сообщение от сервера:", msg.data);
+      console.log("Message from server:", msg.data, new Date().toISOString());
     };
 
     btn.onclick = () => {
       if (ws.readyState === WebSocket.OPEN) {
-        const data = {
-          action: "click",
-          user: userId,
-          timestamp: Date.now(),
-        };
+        const data = { action: "click", user: userId, timestamp: Date.now() };
         ws.send(JSON.stringify(data));
-        console.log("Отправлено:", data);
+        console.log("Sent at", new Date().toISOString(), data);
       } else {
-        console.warn("WebSocket не подключен");
-        alert("WebSocket не подключён");
+        console.warn("WS not connected, state:", ws.readyState);
+        alert("WS не подключён, проверь консоль");
       }
     };
+
+    // Клиентский ping для keep-alive
+    setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ action: "ping" }));
+        console.log("Sent ping at", new Date().toISOString());
+      }
+    }, 25000);
   </script>
 </body>
 </html>
