@@ -24,7 +24,7 @@
     const btn = document.getElementById("btnClick");
 
     // Замени на твой Pinggy URL
-    const WS_BASE = "wss://<твой-pinggy-url-здесь>"; // e.g., wss://abc.pinggy.link
+    const WS_BASE = "https://rnagl-94-79-33-20.a.free.pinggy.link"; // e.g., wss://abc.pinggy.link
     const ws = new WebSocket(`${WS_BASE}/ws?user_id=${userId}`);
 
     ws.onopen = () => {
